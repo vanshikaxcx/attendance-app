@@ -1,69 +1,77 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
 const app = express();
-
-app.use(express.json());
+const cors = require('cors');
 app.use(cors());
+app.use(express.json());
 
-// Sample users (should be stored securely in a database in production)
-const users = [
-  { id: 1, username: 'user1', password: 'password1' },
-  { id: 2, username: 'user2', password: 'password2' },
-  { id: 3, username: 'user3', password: 'password3' },
-  { id: 4, username: 'user4', password: 'password4' },
-  { id: 5, username: 'user5', password: 'password5' }
+// Dummy users (replace with DB if needed)
+const USERS = [
+  { username: 'user1', password: 'password1' },
+  { username: 'user2', password: 'password2' },
+  { username: 'user3', password: 'password3' },
+  { username: 'user4', password: 'password4' },
+  { username: 'user5', password: 'password5' }
 ];
 
-// Sample holiday work flag
-const holidayWork = ['user1', 'user3'];
+const JWT_SECRET = 'secret'; // For demo only
+const jwt = require('jsonwebtoken');
 
-const SECRET_KEY = 'your_secret_key';
+// Office location (example: Connaught Place, Delhi)
+const OFFICE_LOCATION = { lat: 28.6315, lng: 77.2167 };
+const MAX_DISTANCE_METERS = 1000; // 1km radius for geo-fencing
 
-// Authentication
+function getDistance(lat1, lon1, lat2, lon2) {
+  const toRad = (x) => x * Math.PI / 180;
+  const R = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
-
-  if (user) {
-    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
-    return res.json({ token });
-  }
-
-  return res.status(401).json({ message: 'Invalid credentials' });
+  const user = USERS.find(u => u.username === username && u.password === password);
+  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
+  res.json({ token });
 });
 
-// Attendance log with geo-location
 app.post('/log-attendance', (req, res) => {
-  const { token, location, isWFH } = req.body;
-  const decoded = jwt.verify(token, SECRET_KEY);
+  const { token, location, isWFH, isHoliday } = req.body;
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const username = payload.username;
 
-  if (!decoded) {
+    if (!isWFH) {
+      const distance = getDistance(
+        location.lat, location.lng,
+        OFFICE_LOCATION.lat, OFFICE_LOCATION.lng
+      );
+      if (distance > MAX_DISTANCE_METERS) {
+        return res.status(400).json({ message: 'Outside geo-fence. Enable WFH if remote.' });
+      }
+    }
+
+    const now = new Date();
+    const attendance = {
+      user: username,
+      timestamp: now,
+      location,
+      isWFH,
+      isHoliday
+    };
+
+    console.log('Attendance logged:', attendance);
+    return res.json({ message: '✅ Attendance marked successfully' });
+
+  } catch (err) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
-
-  const user = users[decoded.id - 1];  // Assuming user IDs start from 1
-
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
-  // Basic geo-fencing logic (example)
-  const isInOffice = location.lat > 40 && location.lng < -75; // Simulated office location
-
-  if (isInOffice || isWFH) {
-    // Log attendance
-    return res.json({ message: 'Attendance logged successfully', user: user.username });
-  }
-
-  return res.status(400).json({ message: 'Location not within allowed geofenced area' });
 });
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-app.get("/api", (req, res) => {
-  res.send("API is working!");
-});
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
