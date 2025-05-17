@@ -75,3 +75,23 @@ app.post('/log-attendance', (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Example backend URL hosted on Render
+const BASE_URL = "https://attendance-app-6bla.onrender.com";
+
+// Login
+fetch(`${BASE_URL}/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username, password }),
+});
+
+// Attendance
+fetch(`${BASE_URL}/log-attendance`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ token, location, isWFH, isHoliday }),
+});
+
+const cors = require("cors");
+app.use(cors());
