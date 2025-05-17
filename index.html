@@ -1,132 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Attendance App</title>
+  <meta charset="UTF-8">
+  <title>Smart Attendance System</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f8;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f8fb;
+      padding: 40px;
+      text-align: center;
+    }
+
+    h1 {
       color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    }
+
+    form, .section {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       padding: 20px;
-      min-height: 100vh;
-    }
-
-    h2 {
-      color: #2c3e50;
-    }
-
-    .container {
-      background-color: #fff;
-      padding: 25px 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      width: 100%;
       max-width: 400px;
-      margin-bottom: 20px;
+      margin: 20px auto;
     }
 
-    input[type="text"], input[type="password"], select {
-      width: 100%;
+    input, select, button {
       padding: 10px;
-      margin: 8px 0 16px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 6px;
       border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
     }
 
     button {
-      width: 100%;
-      padding: 10px;
-      background-color: #3498db;
-      border: none;
+      background: #007bff;
       color: white;
-      font-weight: bold;
-      border-radius: 4px;
       cursor: pointer;
-      font-size: 16px;
+      font-weight: bold;
     }
 
     button:hover {
-      background-color: #2980b9;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    #response {
-      margin-top: 15px;
-      font-weight: bold;
-      min-height: 24px;
-    }
-
-    /* Hide sections initially */
-    #attendanceSection, #managerSection {
-      display: none;
-      max-width: 700px;
-      width: 100%;
+      background: #0056b3;
     }
 
     table {
       width: 100%;
+      margin-top: 20px;
       border-collapse: collapse;
-      margin-top: 10px;
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+      padding: 12px;
+      border: 1px solid #ddd;
       text-align: center;
     }
 
-    th {
-      background-color: #3498db;
-      color: white;
+    tr:hover {
+      background-color: #f0f8ff;
     }
 
+    .toggle-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-  <div class="container" id="loginSection">
-    <h2>Login</h2>
-    <select id="role">
-      <option value="" disabled selected>Select Role</option>
-      <option value="employee">Employee</option>
-      <option value="manager">Manager</option>
-    </select>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-    <p id="response"></p>
+<h1>🕒 Smart Attendance System</h1>
+
+<div class="section">
+  <h2>Login</h2>
+  <input id="username" placeholder="Username" />
+  <input id="password" type="password" placeholder="Password" />
+  <select id="role">
+    <option value="employee">Employee</option>
+    <option value="manager">Manager</option>
+  </select>
+  <button onclick="login()">🔐 Login</button>
+</div>
+
+<div class="section hidden" id="employeeSection">
+  <h2>Welcome, Employee!</h2>
+
+  <div class="toggle-group">
+    <label><input type="checkbox" id="isWFH" /> Work From Home</label>
+    <label><input type="checkbox" id="isHoliday" /> Holiday</label>
   </div>
 
-  <!-- Attendance UI for Employees -->
-  <div class="container" id="attendanceSection">
-    <h2>Mark Attendance</h2>
-    <label><input type="checkbox" id="wfh" /> Working From Home</label>
-    <label><input type="checkbox" id="holiday" /> Holiday Working</label>
-    <button onclick="markAttendance()">Log Attendance</button>
-    <p id="attendanceResponse"></p>
-    <button onclick="logout()" style="margin-top: 15px; background-color: #e74c3c;">Logout</button>
-  </div>
+  <button onclick="logAttendance()">📍 Mark Attendance</button>
+  <button onclick="toggleHistory()">📋 View My Attendance History</button>
 
-  <!-- Manager dashboard placeholder -->
-  <div class="container" id="managerSection">
-    <h2>Manager Dashboard</h2>
-    <p>Fetching attendance data...</p>
-    <table id="attendanceTable">
+  <div id="historySection" class="hidden">
+    <div class="filters">
+      <select id="filterWFH" onchange="fetchMyHistory()">
+        <option value="">WFH Filter</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+      <select id="filterHoliday" onchange="fetchMyHistory()">
+        <option value="">Holiday Filter</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+
+    <table id="myHistoryTable">
       <thead>
         <tr>
-          <th>Username</th>
           <th>Date</th>
           <th>WFH</th>
           <th>Holiday</th>
@@ -135,74 +128,65 @@
       </thead>
       <tbody></tbody>
     </table>
-    <button onclick="logout()" style="margin-top: 15px; background-color: #e74c3c;">Logout</button>
   </div>
+</div>
+
+<div class="section hidden" id="managerSection">
+  <h2>Welcome, Manager!</h2>
+  <button onclick="fetchAllAttendance()">📊 View All Attendance</button>
+  <table id="allAttendanceTable" class="hidden">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Date</th>
+        <th>WFH</th>
+        <th>Holiday</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
 <script>
   let token = '';
-  let userRole = '';
 
   async function login() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    userRole = document.getElementById('role').value;
-
-    if (!userRole) {
-      alert('Please select a role');
-      return;
-    }
-    if (!username || !password) {
-      alert('Please enter username and password');
-      return;
-    }
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
 
     const res = await fetch('https://attendance-app-6bla.onrender.com/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, role: userRole }) // send role to backend if needed
+      body: JSON.stringify({ username, password, role })
     });
 
     const data = await res.json();
-    const responseElem = document.getElementById('response');
-
     if (res.ok) {
       token = data.token;
-      responseElem.innerText = '✅ Login successful!';
-
-      // Show relevant UI based on role
-      document.getElementById('loginSection').style.display = 'none';
-
-      if (userRole === 'employee') {
-        document.getElementById('attendanceSection').style.display = 'block';
-      } else if (userRole === 'manager') {
-        document.getElementById('managerSection').style.display = 'block';
-        fetchAttendanceData();
+      if (role === 'employee') {
+        document.getElementById('employeeSection').classList.remove('hidden');
+        document.getElementById('managerSection').classList.add('hidden');
+      } else {
+        document.getElementById('managerSection').classList.remove('hidden');
+        document.getElementById('employeeSection').classList.add('hidden');
       }
     } else {
-      responseElem.innerText = data.message || '❌ Login failed';
+      alert(data.message || 'Login failed');
     }
   }
 
-  async function markAttendance() {
-    if (!token) {
-      alert('Please login first.');
-      return;
-    }
+  async function logAttendance() {
+    if (!navigator.geolocation) return alert('Geolocation not supported');
 
-    const isWFH = document.getElementById('wfh').checked;
-    const isHoliday = document.getElementById('holiday').checked;
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const isWFH = document.getElementById('isWFH').checked;
+      const isHoliday = document.getElementById('isHoliday').checked;
 
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
-
-    document.getElementById('attendanceResponse').innerText = 'Getting location...';
-
-    navigator.geolocation.getCurrentPosition(async (position) => {
       const location = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
       };
 
       const res = await fetch('https://attendance-app-6bla.onrender.com/log-attendance', {
@@ -212,23 +196,62 @@
       });
 
       const data = await res.json();
-      document.getElementById('attendanceResponse').innerText = data.message || '❌ Error logging attendance';
-
-    }, (error) => {
-      alert('Error getting location: ' + error.message);
-      document.getElementById('attendanceResponse').innerText = '';
-    });
+      alert(data.message);
+    }, err => alert('Error getting location'));
   }
 
-  async function fetchAttendanceData() {
-    // Fetch attendance data for manager view
-    const res = await fetch('https://attendance-app-6bla.onrender.com/attendance-data', {
-      method: 'GET',
+  function toggleHistory() {
+    const historySection = document.getElementById('historySection');
+    historySection.classList.toggle('hidden');
+    if (!historySection.classList.contains('hidden')) {
+      fetchMyHistory();
+    }
+  }
+
+  async function fetchMyHistory() {
+    const filterWFH = document.getElementById('filterWFH').value;
+    const filterHoliday = document.getElementById('filterHoliday').value;
+
+    const res = await fetch('https://attendance-app-6bla.onrender.com/my-attendance', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
     const data = await res.json();
-    const tbody = document.querySelector('#attendanceTable tbody');
+    const tableBody = document.querySelector('#myHistoryTable tbody');
+    tableBody.innerHTML = '';
+
+    if (res.ok && Array.isArray(data.attendance)) {
+      let filtered = data.attendance;
+      if (filterWFH) filtered = filtered.filter(r => r.isWFH === (filterWFH === 'yes'));
+      if (filterHoliday) filtered = filtered.filter(r => r.isHoliday === (filterHoliday === 'yes'));
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4">No matching records</td></tr>';
+      } else {
+        filtered.forEach(record => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(record.date).toLocaleDateString()}</td>
+            <td>${record.isWFH ? 'Yes' : 'No'}</td>
+            <td>${record.isHoliday ? 'Yes' : 'No'}</td>
+            <td>${record.location ? `(${record.location.lat.toFixed(3)}, ${record.location.lng.toFixed(3)})` : 'N/A'}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+      }
+    } else {
+      tableBody.innerHTML = `<tr><td colspan="4">Error loading data.</td></tr>`;
+    }
+  }
+
+  async function fetchAllAttendance() {
+    const res = await fetch('https://attendance-app-6bla.onrender.com/attendance-data', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    const table = document.getElementById('allAttendanceTable');
+    const tbody = table.querySelector('tbody');
     tbody.innerHTML = '';
 
     if (res.ok && Array.isArray(data.attendance)) {
@@ -243,44 +266,13 @@
         `;
         tbody.appendChild(tr);
       });
+      table.classList.remove('hidden');
     } else {
-      tbody.innerHTML = `<tr><td colspan="5">No attendance data found or error fetching data.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5">Failed to load data</td></tr>`;
+      table.classList.remove('hidden');
     }
   }
-
-  function logout() {
-    token = '';
-    userRole = '';
-    document.getElementById('response').innerText = '';
-    document.getElementById('attendanceResponse').innerText = '';
-
-    // Hide all except login
-    document.getElementById('loginSection').style.display = 'block';
-    document.getElementById('attendanceSection').style.display = 'none';
-    document.getElementById('managerSection').style.display = 'none';
-
-    // Clear inputs
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('role').value = '';
-    document.getElementById('wfh').checked = false;
-    document.getElementById('holiday').checked = false;
-  }
-
-
 </script>
-<button onclick="fetchMyHistory()" style="margin-top: 10px;">View My Attendance History</button>
-<table id="myHistoryTable" style="display: none;">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>WFH</th>
-      <th>Holiday</th>
-      <th>Location</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
 
 </body>
 </html>
