@@ -106,3 +106,47 @@ app.get('/attendance-data', authenticateToken, (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// New route for employees to view their own attendance history
+app.get('/my-attendance', authenticateToken, (req, res) => {
+  if (req.user.role !== 'employee') {
+    return res.status(403).json({ message: 'Access denied. Employee only.' });
+  }
+
+  const userLogs = ATTENDANCE_LOG.filter(log => log.username === req.user.username);
+  res.json({ attendance: userLogs });
+});
+
+async function fetchMyHistory() {
+  if (!token) {
+    alert('Please log in first.');
+    return;
+  }
+
+  const res = await fetch('https://attendance-app-6bla.onrender.com/my-attendance', {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  const data = await res.json();
+  const table = document.getElementById('myHistoryTable');
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+
+  if (res.ok && Array.isArray(data.attendance)) {
+    data.attendance.forEach(record => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${new Date(record.date).toLocaleDateString()}</td>
+        <td>${record.isWFH ? 'Yes' : 'No'}</td>
+        <td>${record.isHoliday ? 'Yes' : 'No'}</td>
+        <td>${record.location ? `(${record.location.lat.toFixed(3)}, ${record.location.lng.toFixed(3)})` : 'N/A'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    table.style.display = 'table';
+  } else {
+    tbody.innerHTML = `<tr><td colspan="4">No records found or error fetching data.</td></tr>`;
+    table.style.display = 'table';
+  }
+}
