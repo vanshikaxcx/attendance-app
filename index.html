@@ -4,16 +4,80 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Attendance App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 25px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #3498db;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    #response {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <h2>Login</h2>
-  <input type="text" id="username" placeholder="Username"><br>
-  <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
 
-  <h2>Mark Attendance</h2>
-  <label><input type="checkbox" id="wfh"> Working From Home</label><br>
-  <button onclick="markAttendance()">Log Attendance</button>
+  <div class="container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="container">
+    <h2>Mark Attendance</h2>
+    <label><input type="checkbox" id="wfh" /> Working From Home</label>
+    <label><input type="checkbox" id="holiday" /> Holiday Working</label>
+    <button onclick="markAttendance()">Log Attendance</button>
+  </div>
 
   <p id="response"></p>
 
@@ -33,30 +97,31 @@
       const data = await res.json();
       if (res.ok) {
         token = data.token;
-        document.getElementById('response').innerText = 'Login successful!';
+        document.getElementById('response').innerText = '✅ Login successful!';
       } else {
-        document.getElementById('response').innerText = data.message || 'Login failed';
+        document.getElementById('response').innerText = data.message || '❌ Login failed';
       }
     }
 
     async function markAttendance() {
       if (!token) {
-        return alert('Login first!');
+        return alert('Please login first.');
       }
 
       const isWFH = document.getElementById('wfh').checked;
+      const isHoliday = document.getElementById('holiday').checked;
 
-      // Simulated location (change this as needed)
-      const location = { lat: 41.0, lng: -76.0 };
+      // Simulated static location (lat/lng); this can be replaced with real location later
+      const location = { lat: 28.6139, lng: 77.2090 };
 
       const res = await fetch('https://attendance-app-6bla.onrender.com/log-attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, location, isWFH })
+        body: JSON.stringify({ token, location, isWFH, isHoliday })
       });
 
       const data = await res.json();
-      document.getElementById('response').innerText = data.message || 'Error logging attendance';
+      document.getElementById('response').innerText = data.message || '❌ Error logging attendance';
     }
   </script>
 </body>
