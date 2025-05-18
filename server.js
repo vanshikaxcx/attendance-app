@@ -162,3 +162,31 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`✅ Server running at: http://localhost:${PORT}`);
 });
+
+const path = require('path');
+
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+const cors = require('cors');
+app.use(cors());
+
+fetch('http://localhost:8080/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username, password, role }),
+});
+ if (!res.ok) {
+    const err = await res.json();
+    alert(err.message || 'Login failed');
+    return;
+  }
+
+  const data = await res.json();
+  localStorage.setItem('token', data.token); // or set state
+  // Show employee or manager section accordingly
+
+const express = require('express');
