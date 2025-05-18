@@ -1,17 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = 'secret'; // For demo only. Use env vars in prod.
+// Serve static frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
+const JWT_SECRET = 'secret'; // For demo only. Use env vars in production.
 
 // Dummy users
 const USERS = [
   { username: 'user1', password: 'password1', role: 'employee' },
   { username: 'user2', password: 'password2', role: 'employee' },
+  { username: 'user3', password: 'password3', role: 'employee' },
+  { username: 'user4', password: 'password4', role: 'employee' },
+  { username: 'user5', password: 'password5', role: 'employee' },
   { username: 'manager1', password: 'managerpass', role: 'manager' }
 ];
 
@@ -25,13 +32,12 @@ const ATTENDANCE_LOG = [];
 // Utility: calculate distance (Haversine formula)
 function getDistance(lat1, lon1, lat2, lon2) {
   const toRad = x => (x * Math.PI) / 180;
-  const R = 6371000; // meters
+  const R = 6371000;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
     Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
@@ -40,6 +46,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 app.post('/login', (req, res) => {
   const { username, password, role } = req.body;
   const user = USERS.find(u => u.username === username && u.password === password && u.role === role);
+
   if (!user) return res.status(401).json({ message: 'Invalid credentials or role' });
 
   const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
@@ -61,7 +68,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Route: Employee logs attendance
+// Route: Log attendance
 app.post('/log-attendance', (req, res) => {
   const { token, location, isWFH, isHoliday } = req.body;
 
@@ -98,7 +105,7 @@ app.post('/log-attendance', (req, res) => {
   }
 });
 
-// Route: Get all attendance (Manager only)
+// Route: Manager view - all attendance
 app.get('/attendance-data', authenticateToken, (req, res) => {
   if (req.user.role !== 'manager') {
     return res.status(403).json({ message: 'Access denied. Manager only.' });
@@ -107,7 +114,7 @@ app.get('/attendance-data', authenticateToken, (req, res) => {
   res.json({ attendance: ATTENDANCE_LOG });
 });
 
-// Route: Get logged-in employee’s attendance
+// Route: Employee view - personal attendance
 app.get('/my-attendance', authenticateToken, (req, res) => {
   if (req.user.role !== 'employee') {
     return res.status(403).json({ message: 'Access denied. Employee only.' });
@@ -117,7 +124,13 @@ app.get('/my-attendance', authenticateToken, (req, res) => {
   res.json({ attendance: userAttendance });
 });
 
+// Serve index.html for root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Start server
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log(`✅ Server running at: http://localhost:${PORT}`);
 });
