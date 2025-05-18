@@ -9,11 +9,17 @@
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       color: #fff;
       padding: 40px;
-      text-align: center;
+      margin: 0;
     }
 
     h1, h2 {
       color: #e3f2fd;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
     }
 
     form, .section {
@@ -21,13 +27,12 @@
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       padding: 20px;
-      max-width: 500px;
       margin: 20px auto;
       backdrop-filter: blur(10px);
     }
 
     input, select, button, textarea {
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
       width: 100%;
       border-radius: 6px;
@@ -36,7 +41,7 @@
     }
 
     button {
-      background: #1e88e5;
+      background: #00bcd4;
       color: white;
       cursor: pointer;
       font-weight: bold;
@@ -44,7 +49,7 @@
     }
 
     button:hover {
-      background: #1565c0;
+      background: #0097a7;
     }
 
     table {
@@ -77,6 +82,7 @@
   </style>
 </head>
 <body>
+<div class="container">
 <h1>Smart Attendance System</h1>
 
 <div class="section">
@@ -149,6 +155,7 @@
   <h3>Leave Requests</h3>
   <div id="leaveRequests"></div>
 </div>
+</div>
 
 <script>
   let token = '';
@@ -190,8 +197,11 @@
 
       const res = await fetch('https://attendance-app-6bla.onrender.com/log-attendance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, location, isWFH, isHoliday })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ location, isWFH, isHoliday })
       });
 
       const data = await res.json();
@@ -276,8 +286,11 @@
 
     const res = await fetch('https://attendance-app-6bla.onrender.com/apply-leave', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, reason })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ reason })
     });
     const data = await res.json();
     alert(data.message);
@@ -310,8 +323,11 @@
   async function handleLeave(id, approved) {
     const res = await fetch('https://attendance-app-6bla.onrender.com/handle-leave', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, id, approved })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ id, approved })
     });
     const data = await res.json();
     alert(data.message);
