@@ -26,8 +26,9 @@ const USERS = [
 const OFFICE_LOCATION = { lat: 28.6315, lng: 77.2167 }; // Delhi
 const MAX_DISTANCE_METERS = 1000;
 
-// In-memory attendance storage
+// In-memory data
 const ATTENDANCE_LOG = [];
+const LEAVE_REQUESTS = [];
 
 // Utility: calculate distance (Haversine formula)
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -122,6 +123,48 @@ app.get('/my-attendance', authenticateToken, (req, res) => {
 
   const userAttendance = ATTENDANCE_LOG.filter(log => log.username === req.user.username);
   res.json({ attendance: userAttendance });
+});
+
+// Route: Apply for leave
+app.post('/apply-leave', authenticateToken, (req, res) => {
+  if (req.user.role !== 'employee') {
+    return res.status(403).json({ message: 'Only employees can apply for leave' });
+  }
+
+  const { fromDate, toDate, reason } = req.body;
+  const leave = {
+    id: LEAVE_REQUESTS.length + 1,
+    username: req.user.username,
+    fromDate,
+    toDate,
+    reason,
+    status: 'pending'
+  };
+  LEAVE_REQUESTS.push(leave);
+  res.json({ message: 'Leave request submitted', leave });
+});
+
+// Route: Manager - view leave requests
+app.get('/leave-requests', authenticateToken, (req, res) => {
+  if (req.user.role !== 'manager') {
+    return res.status(403).json({ message: 'Only managers can view leave requests' });
+  }
+
+  res.json({ requests: LEAVE_REQUESTS });
+});
+
+// Route: Manager - update leave status
+app.post('/leave-decision', authenticateToken, (req, res) => {
+  if (req.user.role !== 'manager') {
+    return res.status(403).json({ message: 'Only managers can update leave status' });
+  }
+
+  const { id, status } = req.body;
+  const leave = LEAVE_REQUESTS.find(l => l.id === id);
+  if (!leave) return res.status(404).json({ message: 'Leave request not found' });
+
+  leave.status = status;
+  res.json({ message: `Leave request ${status}`, leave });
 });
 
 // Serve index.html for root route
